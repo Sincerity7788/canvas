@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小球自由落体</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            height: 100vh;
+            font-size: 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas_container" width="300" height="150"></canvas>
+</body>
+<script>
+    // 获取canvas
+    const canvas = document.getElementById('canvas_container');
+    // 获取窗口宽高
+    const windowW = window.document.body.offsetWidth;
+    const windowH = window.document.body.offsetHeight;
+
+    // 设置canvas的宽高
+    canvas.width = windowW;
+    canvas.height = windowH;
+
+    // 获取 canvas 的上下文对象
+    const ctx = canvas.getContext('2d');
+
+    /**
+     * 创建一个球的类
+     * @param ctx 画布上下文
+     * @param x 小球 X 轴的位置
+     * @param y 小球 Y 轴的位置
+     * @param r 小球的半径
+     * @param color 小球的颜色
+     * */
+    class Ball{
+      constructor(ctx, x, y, dx, dy, r, color){
+        this.ctx = ctx;
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.color = color;
+        this.dx = dx;
+        this.dy = dy;
+        this.isLow = false;
+        this.isLowNum = 0;
+        this.friction = 0.9;
+      }
+      // 绘制小球
+      draw = () => {
+        const { ctx, x, y, r, color } = this;
+        // 开始路径
+        ctx.beginPath();
+        // 设置小球颜色
+        ctx.fillStyle = color;
+        // 创建小球路径
+        ctx.arc(x, y, r, 0, 2 * Math.PI, false);
+        // 绘制
+        ctx.fill();
+      }
+
+      // 改变位置
+      update = () => {
+        // 判断当前小球是否到底了
+        if( this.y + this.dy + this.r > windowH ){
+          this.dy = -this.dy;
+          this.dy *= 0.9;
+          this.isLowNum -= 4
+        }else {
+          this.dy += this.friction;
+          this.isLowNum++
+        }
+
+        if( this.x + this.dx + this.r > windowW || this.x - this.dx - this.r < 0 ){
+          this.dx = -this.dx;
+        }
+
+
+
+        // 判断当前是否已经到底了。不在需要运动了。不消耗多余的性能
+        if( this.isLowNum < 0 ){
+          this.isLow = true
+        }
+        this.x += this.dx;
+        this.y += this.dy;
+        this.draw();
+      }
+
+    }
+
+    // 定义一个获取随机数范围方法
+    const randomNum = (a, b) => Math.floor(Math.random() * ( b - a ) + a)
+
+    // 定义一个颜色组
+    const colorList = ['#FFFFCC', '#CCFFFF', '#FFCCCC', '#CCCCFF', '#CCFFCC']
+
+    const ballList = [];
+    for( let i = 0; i < 200;i++ ){
+      const r = randomNum(5, 20)
+      const ball = new Ball(ctx, randomNum(r, windowW - r), randomNum(r, windowH - r), Math.random() - 0.5, randomNum(0.1, 2), r, colorList[randomNum(0, colorList.length)]);
+      ball.draw();
+      ballList.push(ball);
+    }
+
+    // 动画方法
+    function init() {
+      if( !ballList.every(item => item.isLow)   ){
+        requestAnimationFrame(init);
+      }
+
+      // 清空
+      ctx.clearRect(0, 0, windowW, windowH)
+      ballList.forEach(item => {
+        item.update();
+      })
+
+    }
+    init()
+</script>
+</html>
